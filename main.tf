@@ -10,6 +10,22 @@ resource "aws_db_subnet_group" "aurora_subnet_group" {
   }
 }
 
+resource "random_string" "sql_server_suffix" {
+  length  = 4
+  special = false
+  upper   = false
+  lower   = true
+  numeric = true
+}
+resource "random_password" "sql_password" {
+  length           = 16
+  special          = true
+  upper            = true
+  lower            = true
+  numeric          = true
+  override_special = "!#%^*_+=-"
+}
+
 resource "aws_rds_cluster" "aurora" {
   for_each = { for aurora in var.aurora_details : aurora.cluster_identifier => aurora }
 
@@ -19,7 +35,7 @@ resource "aws_rds_cluster" "aurora" {
   availability_zones       = var.availability_zones
   database_name            = each.value.database_name
   master_username          = each.value.master_username
-  master_password          = each.value.master_password
+  master_password          = random_password.sql_password.result
   backup_retention_period  = each.value.backup_retention_period
   preferred_backup_window  = each.value.preferred_backup_window
   final_snapshot_identifier = each.value.final_snapshot_identifier

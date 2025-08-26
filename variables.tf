@@ -44,7 +44,6 @@ variable "aurora_details" {
     engine_version            = string
     database_name             = string
     master_username           = string
-    master_password           = string
     backup_retention_period   = number
     preferred_backup_window   = string
     final_snapshot_identifier = string
