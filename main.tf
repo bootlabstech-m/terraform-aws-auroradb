@@ -26,6 +26,26 @@ resource "random_password" "sql_password" {
   override_special = "!#%^*_+=-"
 }
 
+######################################
+# Store DB credentials in Secrets Manager
+######################################
+resource "aws_secretsmanager_secret" "aurora_secret" {
+  for_each = var.aurora_details
+  name = "${each.value.database_name}-aurora-db-credentials"
+}
+
+resource "aws_secretsmanager_secret_version" "aurora_secret_value" {
+  for_each = var.aurora_details
+
+  secret_id = aws_secretsmanager_secret.aurora_secret[each.key].id
+  secret_string = jsonencode({
+    username = aws_rds_cluster.aurora[each.key].master_username
+    password = random_password.sql_password.result
+    endpoint = aws_rds_cluster.aurora[each.key].endpoint
+    port     = aws_rds_cluster.aurora[each.key].port
+  })
+}
+
 resource "aws_rds_cluster" "aurora" {
   for_each = { for aurora in var.aurora_details : aurora.cluster_identifier => aurora }
 
